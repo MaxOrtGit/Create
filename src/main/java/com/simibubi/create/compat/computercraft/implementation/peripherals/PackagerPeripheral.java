@@ -11,17 +11,17 @@ import net.minecraftforge.items.ItemStackHandler;
 import org.checkerframework.checker.units.qual.C;
 import org.jetbrains.annotations.NotNull;
 
+import com.simibubi.create.content.logistics.box.PackageItem;
 import com.simibubi.create.content.logistics.packager.PackagerBlockEntity;
 import com.simibubi.create.content.logistics.stockTicker.PackageOrderWithCrafts;
 import com.simibubi.create.content.logistics.stockTicker.PackageOrderWithCrafts.CraftingEntry;
-import com.simibubi.create.compat.computercraft.implementation.CreateLuaTable;
 import com.simibubi.create.content.logistics.BigItemStack;
+import com.simibubi.create.compat.computercraft.implementation.CreateLuaTable;
 
 import dan200.computercraft.api.lua.LuaFunction;
 import dan200.computercraft.api.lua.LuaException;
-import net.minecraft.world.item.ItemStack;
-import com.simibubi.create.content.logistics.box.PackageItem;
 import dan200.computercraft.api.detail.VanillaDetailRegistries;
+import net.minecraft.world.item.ItemStack;
 
 public class PackagerPeripheral extends SyncedPeripheral<PackagerBlockEntity> {
 
@@ -258,8 +258,6 @@ public class PackagerPeripheral extends SyncedPeripheral<PackagerBlockEntity> {
 
     return crafts;
   }
-
-
 
 	@NotNull
 	@Override
