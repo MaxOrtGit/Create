@@ -29,7 +29,7 @@ public class PackageLuaObject {
 
   @LuaFunction(mainThread = true)
   public final boolean isValid() {
-    return !blockEntity.heldBox.isEmpty() && blockEntity.heldBox == box;
+    return blockEntity == null || (!blockEntity.heldBox.isEmpty() && blockEntity.heldBox == box);
   }
 
   public final void checkValid() throws LuaException {
