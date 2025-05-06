@@ -6,22 +6,17 @@ import java.util.Map;
 import java.util.Optional;
 
 import dan200.computercraft.api.peripheral.IComputerAccess;
-import net.minecraftforge.items.ItemStackHandler;
+import net.minecraft.world.item.ItemStack;
 
-import org.checkerframework.checker.units.qual.C;
 import org.jetbrains.annotations.NotNull;
 
-import com.simibubi.create.content.logistics.box.PackageItem;
+import com.simibubi.create.compat.computercraft.implementation.luaObjects.PackageLuaObject;
 import com.simibubi.create.content.logistics.packager.PackagerBlockEntity;
-import com.simibubi.create.content.logistics.stockTicker.PackageOrderWithCrafts;
-import com.simibubi.create.content.logistics.stockTicker.PackageOrderWithCrafts.CraftingEntry;
 import com.simibubi.create.content.logistics.BigItemStack;
-import com.simibubi.create.compat.computercraft.implementation.CreateLuaTable;
 
 import dan200.computercraft.api.lua.LuaFunction;
 import dan200.computercraft.api.lua.LuaException;
 import dan200.computercraft.api.detail.VanillaDetailRegistries;
-import net.minecraft.world.item.ItemStack;
 
 public class PackagerPeripheral extends SyncedPeripheral<PackagerBlockEntity> {
 
@@ -110,153 +105,12 @@ public class PackagerPeripheral extends SyncedPeripheral<PackagerBlockEntity> {
 	}
 
   @LuaFunction(mainThread = true)
-  public final String getPackageAddress() {
-    if (!blockEntity.heldBox.isEmpty())
-      return PackageItem.getAddress(blockEntity.heldBox);
-    return null;
-  }
-
-	@LuaFunction(mainThread = true)
-	public final boolean setPackageAddress(Optional<String> argument) {
-		if (!blockEntity.heldBox.isEmpty()) {
-			if (argument.isPresent()) {
-				PackageItem.addAddress(blockEntity.heldBox, argument.get());
-			} else {
-				PackageItem.addAddress(blockEntity.heldBox, "");
-			}
-			return true;
-		}
-		return false;
-	}
-  
-  @LuaFunction(mainThread = true)
-  public final Integer getPackageOrderID() {
-		if (!blockEntity.heldBox.isEmpty()) {
-			return PackageItem.getOrderId(blockEntity.heldBox);
-		}
-    return null;
-  }
-  
-	@LuaFunction(mainThread = true)
-	public final Map<Integer, Map<String, ?>> getPackageList() {
-		ItemStack box = blockEntity.heldBox;
-		if (box.isEmpty())
-			return null;
-
-		ItemStackHandler results = PackageItem.getContents(box);
-		Map<Integer, Map<String, ?>> result = new HashMap<>();
-		for (int i = 0; i < results.getSlots(); i++) {
-			ItemStack stack = results.getStackInSlot(i);
-			if (!stack.isEmpty()) {
-				Map<String, Object> details = new HashMap<>(
-          VanillaDetailRegistries.ITEM_STACK.getBasicDetails(stack));
-				result.put(i + 1, details); // +1 because lua
-			}
-		}
-		return result;
-	}
-
-  @LuaFunction(mainThread = true)
-  public final Map<String, ?> getPackageItemDetail(int slot) throws LuaException {
-    if (slot < 1 || slot > PackageItem.SLOTS) {
-      throw new LuaException("Slot out of range (between 1 and " + PackageItem.SLOTS + ")");
-    }
-
+  public final PackageLuaObject getPackage() {
     ItemStack box = blockEntity.heldBox;
     if (box.isEmpty())
       return null;
 
-    ItemStackHandler results = PackageItem.getContents(box);
-    ItemStack stack = results.getStackInSlot(slot - 1);
-    if (stack.isEmpty())
-      return null;
-
-    return new HashMap<>(VanillaDetailRegistries.ITEM_STACK.getDetails(stack));
-  }
-
-  @LuaFunction(mainThread = true)
-  public final CreateLuaTable getPackageOrderedStacksList()
-  {
-    ItemStack box = blockEntity.heldBox;
-    if (box.isEmpty())
-      return null;
-      
-    PackageOrderWithCrafts context = PackageItem.getOrderContext(box);
-    if (context == null)
-      return null;
-    
-    CreateLuaTable stacks = new CreateLuaTable();
-    
-    int i = 0;
-    for (BigItemStack bis : context.stacks()) {
-      i++;
-      Map<String, Object> details = new HashMap<>(
-          VanillaDetailRegistries.ITEM_STACK.getBasicDetails(bis.stack));
-      details.put("count", bis.count); // Use bis count
-      stacks.put(i, details);
-    }
-
-    return stacks;
-  }
-
-  @LuaFunction(mainThread = true)
-  public final CreateLuaTable getPackageOrderedStacksItemDetail(int slot) throws LuaException {
-    if (slot < 1) { // All positive can technically be valid
-      throw new LuaException("Slot out of range (1 or greater)");
-    }
-
-    ItemStack box = blockEntity.heldBox;
-    if (box.isEmpty())
-      return null;
-
-    PackageOrderWithCrafts context = PackageItem.getOrderContext(box);
-    if (context == null)
-      return null;
-
-    List<BigItemStack> stacks = context.stacks();
-    if (slot > stacks.size()) {
-      return null;
-    }
-
-    BigItemStack bis = stacks.get(slot - 1);
-    Map<String, Object> details = new HashMap<>(
-        VanillaDetailRegistries.ITEM_STACK.getDetails(bis.stack));
-    details.put("count", bis.count); // Use bis count
-
-    return new CreateLuaTable(details);
-  }
-
-  @LuaFunction(mainThread = true)
-  public final CreateLuaTable getPackageOrderedCrafts() {
-    ItemStack box = blockEntity.heldBox;
-    if (box.isEmpty())
-      return null;
-
-    PackageOrderWithCrafts context = PackageItem.getOrderContext(box);
-    if (context == null)
-      return null;
-
-    CreateLuaTable crafts = new CreateLuaTable();
-    
-    int i = 0;
-    for (CraftingEntry entry : context.orderedCrafts()) {
-      CreateLuaTable craft = new CreateLuaTable();
-      craft.put("count", entry.count());
-
-      CreateLuaTable recipe = new CreateLuaTable();
-      int j = 0;
-      for (BigItemStack bis : entry.pattern().stacks()) {
-        j++;
-        // Not sure if this is the best way to get the in game ID for the item, if there is please let me know
-        String name = VanillaDetailRegistries.ITEM_STACK.getBasicDetails(bis.stack).get("name").toString();
-        recipe.put(j, name.equals("minecraft:air") ? null : name);
-      }
-      i++;
-      craft.put("recipe", recipe);
-      crafts.put(i, craft);
-    }
-
-    return crafts;
+    return new PackageLuaObject(blockEntity, box);
   }
 
 	@NotNull
