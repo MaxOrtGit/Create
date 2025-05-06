@@ -41,11 +41,6 @@ public class PackagerPeripheral extends SyncedPeripheral<PackagerBlockEntity> {
 	}
 
 	@LuaFunction(mainThread = true)
-	public final int getItemCount() {
-		return blockEntity.getAvailableItems().getTotalCount();
-	}
-
-	@LuaFunction(mainThread = true)
 	public final boolean makePackage() {
 		if (!blockEntity.heldBox.isEmpty())
 			return false;
@@ -53,6 +48,11 @@ public class PackagerPeripheral extends SyncedPeripheral<PackagerBlockEntity> {
 		if (blockEntity.heldBox.isEmpty())
 			return false;
 		return true;
+	}
+
+	@LuaFunction(mainThread = true)
+	public final int getItemCount() {
+		return blockEntity.getAvailableItems().getTotalCount();
 	}
 
 	@LuaFunction(mainThread = true)
@@ -86,6 +86,11 @@ public class PackagerPeripheral extends SyncedPeripheral<PackagerBlockEntity> {
     details.put("count", entry.count);
     return details;
   }
+  
+	@LuaFunction(mainThread = true)
+	public final String getAddress() {
+		return blockEntity.signBasedAddress;
+	}
 
 	@LuaFunction(mainThread = true)
 	public final void setAddress(Optional<String> argument) {
@@ -97,11 +102,6 @@ public class PackagerPeripheral extends SyncedPeripheral<PackagerBlockEntity> {
 			blockEntity.customComputerAddress = "";
 			blockEntity.hasCustomComputerAddress = false;
 		}
-	}
-
-	@LuaFunction(mainThread = true)
-	public final String getAddress() throws LuaException {
-		return blockEntity.signBasedAddress;
 	}
 
   @LuaFunction(mainThread = true)
