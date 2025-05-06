@@ -49,12 +49,7 @@ public class PackagerPeripheral extends SyncedPeripheral<PackagerBlockEntity> {
 			return false;
 		return true;
 	}
-
-	@LuaFunction(mainThread = true)
-	public final int getItemCount() {
-		return blockEntity.getAvailableItems().getTotalCount();
-	}
-
+  
 	@LuaFunction(mainThread = true)
 	public final Map<Integer, Map<String, ?>> list() {
 		Map<Integer, Map<String, ?>> result = new HashMap<>();
