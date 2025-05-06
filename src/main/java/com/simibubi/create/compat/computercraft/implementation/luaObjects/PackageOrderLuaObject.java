@@ -19,17 +19,50 @@ import net.minecraft.world.item.ItemStack;
 
 public class PackageOrderLuaObject {
   
-  private PackageLuaObject packageLuaObject;
+  private PackageLuaObject parent;
   private PackageOrderWithCrafts context;
 
-  public PackageOrderLuaObject(PackageLuaObject packageLuaObject, PackageOrderWithCrafts context) {
-    this.packageLuaObject = packageLuaObject;
-    this.context = context;
+  public PackageOrderLuaObject(PackageLuaObject packageLuaObject) {
+    this.parent = packageLuaObject;
+    this.context = PackageItem.getOrderContext(parent.box);
   }
   
   @LuaFunction(mainThread = true)
+  public final int getOrderID() throws LuaException {
+		parent.checkValid();
+    return PackageItem.getOrderId(parent.box);
+  }
+
+  @LuaFunction(mainThread = true)
+  public final int getIndex() throws LuaException {
+    parent.checkValid();
+    return PackageItem.getIndex(parent.box) + 1;
+  }
+
+  @LuaFunction(mainThread = true)
+  public final boolean isFinal() throws LuaException {
+    parent.checkValid();
+    return PackageItem.isFinal(parent.box);
+  }
+
+  @LuaFunction(mainThread = true)
+  public final int getLinkIndex() throws LuaException {
+    parent.checkValid();
+    return PackageItem.getLinkIndex(parent.box) + 1;
+  }
+
+  @LuaFunction(mainThread = true)
+  public final boolean isFinalLink() throws LuaException {
+    parent.checkValid();
+    return PackageItem.isFinalLink(parent.box);
+  }
+
+  @LuaFunction(mainThread = true)
   public final CreateLuaTable list() throws LuaException {
-    packageLuaObject.checkValid();
+    parent.checkValid();
+    if (context == null) {
+      return null;
+    }
     
     CreateLuaTable stacks = new CreateLuaTable();
     
@@ -47,7 +80,10 @@ public class PackageOrderLuaObject {
 
   @LuaFunction(mainThread = true)
   public final CreateLuaTable getItemDetail(int slot) throws LuaException {
-    packageLuaObject.checkValid();
+    parent.checkValid();
+    if (context == null) {
+      return null;
+    }
     
     if (slot < 1) { // All positive can technically be valid
       throw new LuaException("Slot out of range (1 or greater)");
@@ -68,7 +104,11 @@ public class PackageOrderLuaObject {
 
   @LuaFunction(mainThread = true)
   public final CreateLuaTable getCrafts() throws LuaException {
-    packageLuaObject.checkValid();
+    parent.checkValid();
+    if (context == null) {
+      return null;
+    }
+
     CreateLuaTable crafts = new CreateLuaTable();
     
     int i = 0;
