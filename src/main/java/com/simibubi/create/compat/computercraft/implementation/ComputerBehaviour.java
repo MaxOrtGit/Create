@@ -1,6 +1,8 @@
 package com.simibubi.create.compat.computercraft.implementation;
 
 import com.simibubi.create.compat.computercraft.AbstractComputerBehaviour;
+import com.simibubi.create.compat.computercraft.implementation.luaObjects.PackageLuaObject;
+import com.simibubi.create.compat.computercraft.implementation.luaObjects.PackageOrderLuaObject;
 import com.simibubi.create.compat.computercraft.implementation.peripherals.DisplayLinkPeripheral;
 import com.simibubi.create.compat.computercraft.implementation.peripherals.FrogportPeripheral;
 import com.simibubi.create.compat.computercraft.implementation.peripherals.PostboxPeripheral;
@@ -20,6 +22,7 @@ import com.simibubi.create.compat.computercraft.implementation.peripherals.Redst
 import com.simibubi.create.content.logistics.packager.repackager.RepackagerBlockEntity;
 import com.simibubi.create.content.logistics.redstoneRequester.RedstoneRequesterBlockEntity;
 import com.simibubi.create.content.logistics.packager.PackagerBlockEntity;
+import com.simibubi.create.content.logistics.stockTicker.PackageOrderWithCrafts;
 import com.simibubi.create.content.logistics.stockTicker.StockTickerBlockEntity;
 import com.simibubi.create.content.kinetics.gauge.SpeedGaugeBlockEntity;
 import com.simibubi.create.content.kinetics.gauge.StressGaugeBlockEntity;
@@ -32,6 +35,7 @@ import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 
 import dan200.computercraft.api.peripheral.IPeripheral;
 import dan200.computercraft.api.detail.VanillaDetailRegistries;
+import dan200.computercraft.api.lua.LuaException;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.CapabilityToken;
@@ -89,8 +93,16 @@ public class ComputerBehaviour extends AbstractComputerBehaviour {
     VanillaDetailRegistries.ITEM_STACK.addProvider((out, stack) -> {
       if (PackageItem.isPackage(stack))
       {
-        out.put("package_address", PackageItem.getAddress(stack));
-        out.put("package_orderID", PackageItem.getOrderId(stack));
+        PackageLuaObject packageLuaObject = new PackageLuaObject(null, stack);
+        try {
+          out.put("package_address", packageLuaObject.getAddress());
+          if (packageLuaObject.hasOrderData()) {
+            PackageOrderLuaObject orderLuaObject = new PackageOrderLuaObject(packageLuaObject);
+            out.put("package_orderID", orderLuaObject.getOrderID());
+          }
+        } catch (LuaException e) {
+          // Ignore because with null blockEntity always valid
+        }
       }
     });
   }

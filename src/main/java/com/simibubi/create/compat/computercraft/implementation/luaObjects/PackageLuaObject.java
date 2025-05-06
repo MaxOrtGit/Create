@@ -19,8 +19,8 @@ import net.minecraftforge.items.ItemStackHandler;
 
 public class PackageLuaObject {
 
-  private PackagerBlockEntity blockEntity;
-  private ItemStack box;
+  public PackagerBlockEntity blockEntity;
+  public ItemStack box;
 
   public PackageLuaObject(PackagerBlockEntity blockEntity, ItemStack box) {
     this.blockEntity = blockEntity;
@@ -48,12 +48,6 @@ public class PackageLuaObject {
     checkValid();
     PackageItem.addAddress(box, argument);
 	}
-  
-  @LuaFunction(mainThread = true)
-  public final Integer getOrderID() throws LuaException {
-		checkValid();
-    return PackageItem.getOrderId(box);
-  }
   
 	@LuaFunction(mainThread = true)
 	public final Map<Integer, Map<String, ?>> list() throws LuaException {
@@ -87,16 +81,19 @@ public class PackageLuaObject {
 
     return new HashMap<>(VanillaDetailRegistries.ITEM_STACK.getDetails(stack));
   }
+  
+  public boolean hasOrderData() {
+    return PackageItem.hasFragmentData(box);
+  }
 
   @LuaFunction(mainThread = true)
-  public final PackageOrderLuaObject getOrderContext() throws LuaException {
+  public final PackageOrderLuaObject getOrderData() throws LuaException {
     checkValid();
 
-    PackageOrderWithCrafts context = PackageItem.getOrderContext(box);
-    if (context == null)
+    if (!hasOrderData())
       return null;
 
-    return new PackageOrderLuaObject(this, context);
+    return new PackageOrderLuaObject(this);
   }
 
 }
