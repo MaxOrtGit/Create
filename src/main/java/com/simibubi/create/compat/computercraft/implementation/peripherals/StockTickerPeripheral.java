@@ -84,9 +84,16 @@ public class StockTickerPeripheral extends SyncedPeripheral<StockTickerBlockEnti
 	 */
 	@LuaFunction(mainThread = true)
 	public final int requestFiltered(IArguments arguments) throws LuaException {
-		if (!(arguments.get(0) instanceof Map<?, ?>))
-			return 0;
-		Map<?, ?> filter = (Map<?, ?>) arguments.get(0);
+		if (!(arguments.get(0) instanceof Map<?, ?> filterTable))
+			throw new LuaException("Filter must be a table");
+
+    for (Object key : filterTable.keySet())
+      if (!(key instanceof String)) 
+        throw new LuaException("Filter keys must be strings");
+
+		@SuppressWarnings("unchecked")
+    Map<String, Object> filter = (Map<String, Object>) filterTable;
+    
 		String address;
 		// Computercraft has forced my hand to make this dollar store filter algo
 		List<BigItemStack> validItems = new ArrayList<>();
