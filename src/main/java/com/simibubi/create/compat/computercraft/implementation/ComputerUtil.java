@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import com.simibubi.create.Create;
 import com.simibubi.create.content.logistics.BigItemStack;
 
 import dan200.computercraft.api.detail.VanillaDetailRegistries;
@@ -31,12 +30,10 @@ public class ComputerUtil {
     }
 
     // If filter is a list, check if the item is in the list
-    Collection fColl = Collection.of(filter);
-    if (fColl == null || !fColl.isMap())
+    if (!(filter instanceof Map<?,?>)) 
       throw new LuaException("Filter must be a map");
 
-    Collection iColl = Collection.of(details);
-    if (!matchMap(fColl, iColl))
+    if (!deepEquals(filter, details))
       return 0;
     return entry.count;
   }
@@ -46,8 +43,8 @@ public class ComputerUtil {
     if (Objects.equals(fVal, iVal)) return true;
 
     // If both are numbers, compare them as doubles because lua numbers are always doubles
-    if (fVal instanceof Number fn && iVal instanceof Number in){
-      return Double.compare(fn.doubleValue(), in.doubleValue()) == 0;}
+    if (fVal instanceof Number fn && iVal instanceof Number in)
+      return Double.compare(fn.doubleValue(), in.doubleValue()) == 0;
 
     // Convert to collections
     Collection fColl = Collection.of(fVal);
