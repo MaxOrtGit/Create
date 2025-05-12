@@ -84,35 +84,37 @@ public class StockTickerPeripheral extends SyncedPeripheral<StockTickerBlockEnti
 	 */
 	@LuaFunction(mainThread = true)
 	public final int requestFiltered(IArguments arguments) throws LuaException {
-		if (!(arguments.get(0) instanceof Map<?, ?>))
-			return 0;
-		Map<?, ?> filter = (Map<?, ?>) arguments.get(0);
+		if (!(arguments.get(0) instanceof Map<?, ?> filterTable))
+			throw new LuaException("Filter must be a table");
+
+    for (Object key : filterTable.keySet())
+      if (!(key instanceof String)) 
+        throw new LuaException("Filter keys must be strings");
+
+		@SuppressWarnings("unchecked")
+    Map<String, Object> filter = (Map<String, Object>) filterTable;
+    
+    int itemsRequested = Integer.MAX_VALUE;
+    if (arguments.get(2) instanceof Number) {
+      itemsRequested = ((Number) arguments.get(2)).intValue();
+      if (itemsRequested < 1)
+        throw new LuaException("Count must be a positive number or nil for all");
+    }
+    int itemsSent = 0;
+    
 		String address;
 		// Computercraft has forced my hand to make this dollar store filter algo
 		List<BigItemStack> validItems = new ArrayList<>();
-		int totalItemCount = 0;
 		for (BigItemStack entry : blockEntity.getAccurateSummary().getStacks()) {
-			if (ComputerUtil.bigItemStackToLuaTableFilter(entry, filter) > 0) {
-				// limit the number of items pulled from the system equals to the requested
-				// count parameter
-				if (filter.containsKey("count")) {
-					Object count = filter.get("count");
-					if (count instanceof Double) {
-						int maxCount = ((Double) count).intValue();
-						int remainingCount = maxCount - totalItemCount;
-
-						if (remainingCount > 0) {
-							int itemsToAdd = Math.min(remainingCount, entry.count);
-							entry.count = itemsToAdd;
-							totalItemCount += itemsToAdd;
-						} else
-							break;
-					}
-				} else {
-					totalItemCount += entry.count;
-				}
+      int foundItems = ComputerUtil.bigItemStackToLuaTableFilter(entry, filter);
+			if (foundItems > 0) {
+				int toTake = Math.min(foundItems, itemsRequested);
+        itemsRequested -= toTake;
+        itemsSent += toTake;
+        entry.count = toTake;
 				validItems.add(entry);
 			}
+      if (itemsRequested <= 0) break;
 		}
 		if (arguments.get(1) instanceof String)
 			address = arguments.getString(1);
@@ -128,7 +130,7 @@ public class StockTickerPeripheral extends SyncedPeripheral<StockTickerBlockEnti
 		 * PackageOrder(itemsToOrder),
 		 * address, false, new PackageOrder(stacks);
 		 */
-		return totalItemCount;
+		return itemsSent;
 	}
 
 	@LuaFunction(mainThread = true)
