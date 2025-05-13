@@ -1,6 +1,8 @@
 package com.simibubi.create.compat.computercraft.implementation.luaObjects;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -17,7 +19,7 @@ import dan200.computercraft.api.lua.LuaFunction;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.items.ItemStackHandler;
 
-public class PackageLuaObject {
+public class PackageLuaObject implements LuaComparable {
 
   public PackagerBlockEntity blockEntity;
   public ItemStack box;
@@ -100,6 +102,37 @@ public class PackageLuaObject {
       return null;
 
     return new PackageOrderLuaObject(this);
+  }
+  
+  public final List<LuaItemStack> getLuaItemStacks() {
+		ItemStackHandler results = PackageItem.getContents(box);
+		List<LuaItemStack> result = new ArrayList<>();
+
+		for (int i = 0; i < results.getSlots(); i++) {
+			ItemStack stack = results.getStackInSlot(i);
+      if (!stack.isEmpty()) {
+        result.add(new LuaItemStack(stack));
+      }
+    }
+    
+    return result;
+	}
+
+  @Override
+  public Map<?,?> getTableRepresentation() {
+    try {
+      Map<String, Object> map = new HashMap<>();
+      map.put("address", getAddress());
+      // Lazy getter so we don't need to get the contents if we don't need to
+      map.put("contents", getLuaItemStacks());
+
+      if (hasOrderData())
+        map.put("orderData", getOrderData());
+      return map;
+
+    } catch (LuaException e) {
+      return null; // Should never happen
+    }
   }
 
 }
