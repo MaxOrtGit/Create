@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import com.simibubi.create.compat.computercraft.implementation.luaObjects.LuaComparable;
 import com.simibubi.create.content.logistics.BigItemStack;
 
 import dan200.computercraft.api.detail.VanillaDetailRegistries;
@@ -39,8 +40,13 @@ public class ComputerUtil {
   }
 
   private static boolean deepEquals(Object fVal, Object iVal) throws LuaException {
-    // Checks primitives, strings and booleans
-    if (Objects.equals(fVal, iVal)) return true;
+    // Checks all non number, Map, and List types
+    if (Objects.equals(iVal, fVal)) return true;
+
+    // Lua Objects can implement LuaComparable to provide a table representation for lazy filtering
+    if (iVal instanceof LuaComparable iStack) {
+      return deepEquals(fVal, iStack.getTableRepresentation());
+    } 
 
     // If both are numbers, compare them as doubles because lua numbers are always doubles
     if (fVal instanceof Number fn && iVal instanceof Number in)
