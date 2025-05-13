@@ -1,5 +1,6 @@
 package com.simibubi.create.compat.computercraft.implementation.luaObjects;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,8 +17,9 @@ import dan200.computercraft.api.detail.VanillaDetailRegistries;
 import dan200.computercraft.api.lua.LuaException;
 import dan200.computercraft.api.lua.LuaFunction;
 import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.items.ItemStackHandler;
 
-public class PackageOrderLuaObject {
+public class PackageOrderLuaObject implements LuaComparable {
   
   private PackageLuaObject parent;
   private PackageOrderWithCrafts context;
@@ -130,6 +132,37 @@ public class PackageOrderLuaObject {
     }
 
     return crafts;
+  }
+  
+  public final List<LuaItemStack> getLuaItemStacks() {
+    List<LuaItemStack> result = new ArrayList<>();
+
+    for (BigItemStack bis : context.stacks()) {
+      ItemStack stack = bis.stack;
+      if (!stack.isEmpty()) {
+        result.add(new LuaItemStack(stack));
+      }
+    }
+    return result;
+	}
+
+  @Override
+  public Map<?, ?> getTableRepresentation() {
+    try {
+      Map<String, Object> result = new HashMap<>();
+      result.put("orderID", getOrderID());
+      result.put("index", getIndex());
+      result.put("isFinal", isFinal());
+      result.put("linkIndex", getLinkIndex());
+      result.put("isFinalLink", isFinalLink());
+      if (context != null) {
+        result.put("stacks", getLuaItemStacks());
+        result.put("crafts", getCrafts());
+      }
+      return result;
+    } catch (LuaException e) {
+      return null; // Should never happen
+    }
   }
 
 }
