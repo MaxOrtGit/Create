@@ -94,15 +94,7 @@ public class ComputerBehaviour extends AbstractComputerBehaviour {
       if (PackageItem.isPackage(stack))
       {
         PackageLuaObject packageLuaObject = new PackageLuaObject(null, stack);
-        try {
-          out.put("package_address", packageLuaObject.getAddress());
-          if (packageLuaObject.hasOrderData()) {
-            PackageOrderLuaObject orderLuaObject = new PackageOrderLuaObject(packageLuaObject);
-            out.put("package_orderID", orderLuaObject.getOrderID());
-          }
-        } catch (LuaException e) {
-          // Ignore because with null blockEntity always valid
-        }
+        out.put("package", packageLuaObject);
       }
     });
   }

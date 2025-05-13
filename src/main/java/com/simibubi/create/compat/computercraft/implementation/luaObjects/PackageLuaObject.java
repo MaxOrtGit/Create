@@ -37,6 +37,11 @@ public class PackageLuaObject {
       throw new LuaException("Invalid package object");
   }
 
+  public final void checkEditable() throws LuaException {
+    if (blockEntity == null)
+      throw new LuaException("Package is not editable");
+  }
+
   @LuaFunction(mainThread = true)
   public final String getAddress() throws LuaException {
     checkValid();
@@ -46,6 +51,7 @@ public class PackageLuaObject {
 	@LuaFunction(mainThread = true)
 	public final void setAddress(String argument) throws LuaException {
     checkValid();
+    checkEditable();
     PackageItem.addAddress(box, argument);
 	}
   
