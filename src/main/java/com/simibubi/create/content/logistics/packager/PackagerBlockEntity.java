@@ -14,6 +14,8 @@ import com.simibubi.create.AllSoundEvents;
 import com.simibubi.create.Create;
 import com.simibubi.create.compat.computercraft.AbstractComputerBehaviour;
 import com.simibubi.create.compat.computercraft.ComputerCraftProxy;
+import com.simibubi.create.compat.computercraft.events.PackageReceiveEvent;
+import com.simibubi.create.compat.computercraft.events.PackageSendEvent;
 import com.simibubi.create.api.packager.unpacking.UnpackingHandler;
 import com.simibubi.create.content.contraptions.actors.psi.PortableStorageInterfaceBlockEntity;
 import com.simibubi.create.content.logistics.BigItemStack;
@@ -142,6 +144,9 @@ public class PackagerBlockEntity extends SmartBlockEntity {
 			if (!level.isClientSide() && !queuedExitingPackages.isEmpty() && heldBox.isEmpty()) {
 				BigItemStack entry = queuedExitingPackages.get(0);
 				heldBox = entry.stack.copy();
+        
+		    if (computerBehaviour.hasAttachedComputer())
+          computerBehaviour.prepareComputerEvent(new PackageSendEvent(this, heldBox));
 
 				entry.count--;
 				if (entry.count <= 0)
@@ -360,6 +365,9 @@ public class PackagerBlockEntity extends SmartBlockEntity {
 		boolean unpacked = toUse.unpack(level, target, targetState, facing, items, orderContext, simulate);
 
 		if (unpacked && !simulate) {
+      if (computerBehaviour.hasAttachedComputer())
+        computerBehaviour.prepareComputerEvent(new PackageReceiveEvent(this, box));
+
 			previouslyUnwrapped = box;
 			animationInward = true;
 			animationTicks = CYCLE;
@@ -500,6 +508,9 @@ public class PackagerBlockEntity extends SmartBlockEntity {
 			queuedExitingPackages.add(new BigItemStack(createdBox, 1));
 			return;
 		}
+    
+    if (computerBehaviour.hasAttachedComputer())
+      computerBehaviour.prepareComputerEvent(new PackageSendEvent(this, createdBox));
 
 		heldBox = createdBox;
 		animationInward = false;

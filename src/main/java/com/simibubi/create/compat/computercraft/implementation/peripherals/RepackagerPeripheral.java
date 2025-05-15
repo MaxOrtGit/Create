@@ -4,6 +4,9 @@ import java.util.Optional;
 
 import com.simibubi.create.content.logistics.packager.repackager.RepackagerBlockEntity;
 import com.simibubi.create.content.logistics.stockTicker.PackageOrderWithCrafts;
+import com.simibubi.create.compat.computercraft.events.ComputerEvent;
+import com.simibubi.create.compat.computercraft.events.PackageReceiveEvent;
+import com.simibubi.create.compat.computercraft.events.PackageSendEvent;
 import com.simibubi.create.compat.computercraft.implementation.luaObjects.PackageLuaObject;
 
 import dan200.computercraft.api.peripheral.IComputerAccess;
@@ -20,19 +23,30 @@ public class RepackagerPeripheral extends SyncedPeripheral<RepackagerBlockEntity
 	}
 
 	@Override
-	public void attach(@NotNull IComputerAccess computer) {
-		super.attach(computer);
+	public void onFirstAttach() {
+		super.onFirstAttach();
 		// Ephemeral nature of address, should not be set on load until a computer
 		// explicitly calls setAddress again on the BE.
 		blockEntity.hasCustomComputerAddress = false;
 	}
 
 	@Override
-	public void detach(@NotNull IComputerAccess computer) {
-		super.detach(computer);
+	public void onLastDetach() {
+		super.onLastDetach();
 		// Ephemeral nature of address, should not be set on load until a computer
 		// explicitly calls setAddress again on the BE.
 		blockEntity.hasCustomComputerAddress = false;
+	}
+  
+  @Override
+	public void prepareComputerEvent(@NotNull ComputerEvent event) {
+		if (event instanceof PackageReceiveEvent pre) {
+      // block entity is null so package is always valid
+			queueEvent("package_receive", new PackageLuaObject(null, pre.box));
+		}
+    else if (event instanceof PackageSendEvent pse) {
+      queueEvent("package_send", new PackageLuaObject(pse.blockEntity, pse.box));
+    }
 	}
   
 	@LuaFunction(mainThread = true)
